@@ -1,24 +1,24 @@
 # plan-trip-backend
 
-API de planejamento de viagens em grupo (**plann.er**). O organizador cria uma viagem, convida participantes por e-mail e o grupo monta junto a agenda de atividades e uma lista de links úteis (reservas, ingressos, etc.).
+API for **plann.er**, a group trip planner. The organizer creates a trip, invites people by email, and the group builds an activity schedule and a list of useful links (bookings, tickets, etc.) together.
 
 ## Stack
 
 - **Node.js** + **TypeScript**
-- **Fastify 4** com **Zod** (`fastify-type-provider-zod`) para validação e tipagem das rotas
-- **Prisma** ORM com **SQLite**
-- **Nodemailer** para os e-mails de confirmação (usa contas de teste do [Ethereal](https://ethereal.email) em desenvolvimento)
-- **Day.js** para datas
+- **Fastify 4** with **Zod** (`fastify-type-provider-zod`) for route validation and typing
+- **Prisma** ORM with **SQLite**
+- **Nodemailer** for confirmation emails (uses [Ethereal](https://ethereal.email) test accounts in development)
+- **Day.js** for dates
 
-## Fluxo
+## Flow
 
-1. `POST /trips` cria a viagem com o dono já confirmado e os convidados pendentes, e envia ao dono um e-mail com o link de confirmação.
-2. Ao abrir `GET /trips/:tripId/confirm`, a viagem é confirmada e cada convidado recebe seu próprio link de confirmação.
-3. `GET /participants/:participantId/confirm` confirma o participante.
+1. `POST /trips` creates the trip with the owner already confirmed and the guests pending, and emails the owner a confirmation link.
+2. Opening `GET /trips/:tripId/confirm` confirms the trip and sends each guest their own confirmation link.
+3. `GET /participants/:participantId/confirm` confirms a participant.
 
-Os links de confirmação redirecionam para o frontend (`WEB_BASE_URL`).
+Confirmation links redirect to the frontend (`WEB_BASE_URL`).
 
-## Modelo de dados
+## Data model
 
 ```
 Trip ─┬─< Participant   (name, email, is_confirmed, is_owner)
@@ -26,33 +26,33 @@ Trip ─┬─< Participant   (name, email, is_confirmed, is_owner)
       └─< Link          (title, url)
 ```
 
-Schema em [`prisma/schema.prisma`](./prisma/schema.prisma), migrations em `prisma/migrations`.
+Schema in [`prisma/schema.prisma`](./prisma/schema.prisma), migrations in `prisma/migrations`.
 
 ## Endpoints
 
-| Método | Rota | Descrição |
+| Method | Route | Description |
 |---|---|---|
-| POST | `/trips` | Cria viagem (`destination`, `starts_at`, `ends_at`, `owner_name`, `owner_email`, `emails_to_invite`) |
-| GET | `/trips/:tripId` | Detalhes da viagem |
-| PUT | `/trips/:tripId` | Atualiza destino e datas |
-| GET | `/trips/:tripId/confirm` | Confirma a viagem e dispara os convites |
-| POST | `/trips/:tripId/invites` | Convida um novo participante por e-mail |
-| GET | `/trips/:tripId/participants` | Lista os participantes |
-| GET | `/participants/:participantId` | Detalhes de um participante |
-| GET | `/participants/:participantId/confirm` | Confirma presença do participante |
-| POST | `/trips/:tripId/activities` | Cria atividade (`title`, `occurs_at`) |
-| GET | `/trips/:tripId/activities` | Atividades agrupadas por dia da viagem |
-| POST | `/trips/:tripId/links` | Adiciona link (`title`, `url`) |
-| GET | `/trips/:tripId/links` | Lista os links |
+| POST | `/trips` | Creates a trip (`destination`, `starts_at`, `ends_at`, `owner_name`, `owner_email`, `emails_to_invite`) |
+| GET | `/trips/:tripId` | Trip details |
+| PUT | `/trips/:tripId` | Updates destination and dates |
+| GET | `/trips/:tripId/confirm` | Confirms the trip and sends the invites |
+| POST | `/trips/:tripId/invites` | Invites a new participant by email |
+| GET | `/trips/:tripId/participants` | Lists participants |
+| GET | `/participants/:participantId` | Participant details |
+| GET | `/participants/:participantId/confirm` | Confirms a participant |
+| POST | `/trips/:tripId/activities` | Creates an activity (`title`, `occurs_at`) |
+| GET | `/trips/:tripId/activities` | Activities grouped by day of the trip |
+| POST | `/trips/:tripId/links` | Adds a link (`title`, `url`) |
+| GET | `/trips/:tripId/links` | Lists links |
 
-### Regras e erros
+### Rules and errors
 
-- Datas validadas no servidor: a viagem não pode começar no passado nem terminar antes de começar, e atividades precisam cair dentro do período da viagem.
-- Um error handler central converte erros do Zod em `400` com os campos inválidos e erros de regra de negócio (`ClientError`) em `400` com a mensagem.
+- Dates are validated on the server: a trip can't start in the past or end before it starts, and activities must fall within the trip dates.
+- A central error handler turns Zod errors into `400` responses with the invalid fields, and business-rule errors (`ClientError`) into `400` responses with the message.
 
-## Rodando localmente
+## Running locally
 
-Pré-requisito: Node.js 20.6+ (o script `dev` usa `--env-file`).
+Requirement: Node.js 20.6+ (the `dev` script uses `--env-file`).
 
 ```bash
 npm install
@@ -61,13 +61,13 @@ npx prisma migrate dev
 npm run dev
 ```
 
-A API sobe em `http://localhost:3333`. Os links dos e-mails enviados aparecem no Ethereal; para inspecionar o banco, use `npx prisma studio`.
+The API runs at `http://localhost:3333`. Sent emails can be viewed on Ethereal; to browse the database, run `npx prisma studio`.
 
-### Variáveis de ambiente
+### Environment variables
 
-| Variável | Exemplo | Uso |
+| Variable | Example | Purpose |
 |---|---|---|
-| `DATABASE_URL` | `file:./dev.db` | Banco SQLite |
-| `API_BASE_URL` | `http://localhost:3333` | Base dos links de confirmação nos e-mails |
-| `WEB_BASE_URL` | `http://localhost:3000` | Para onde as confirmações redirecionam |
-| `PORT` | `3333` | Porta da API |
+| `DATABASE_URL` | `file:./dev.db` | SQLite database |
+| `API_BASE_URL` | `http://localhost:3333` | Base URL for confirmation links in emails |
+| `WEB_BASE_URL` | `http://localhost:3000` | Where confirmation links redirect to |
+| `PORT` | `3333` | API port |
